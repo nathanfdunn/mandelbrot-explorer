@@ -117,6 +117,9 @@ function trySetIterations(event){
 // }
 
 function setIterations(newValue){
+	if (!document.getElementById('autoadjustiterations').checked){
+		return;
+	}
 	if (newValue === undefined){
 		newValue = +document.getElementById('iterinput').value
 		var predicted = Math.round(baseIterations + 15*Math.log(scale));
@@ -214,8 +217,8 @@ function handleScroll (event){
     maxY = originy + visibleHeight/2;
 
     var newIterations = Math.round(baseIterations + 15*Math.log(scale)) + iterAdjustment;
-    
-    
+
+
     // console.log(newIterations);
     setIterations(newIterations);
     
