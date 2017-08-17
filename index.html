@@ -10,8 +10,10 @@
 <div>
 	<div>
 		<label>Iterations:</label><input onkeydown="trySetIterations(event)" id="iterinput" type="text" value="100"><button onclick="setIterations()">Set</button>
+		<input type="checkbox" id="autoadjustiterations" checked>
 	</div>
-	<button onclick="bumpItUp()">Increase</button>	
+	<button onclick="adjust(true)">Increase</button>	
+	<button onclick="adjust(false)">Decrease</button>
 </div>
 
 <table style="display:none">
@@ -88,6 +90,9 @@ var currentLeft, currentRight, currentTop, currentBottom;
 //     context.fillStyle = "black";
 //     context.fillRect(50,50,100,100);
 // }
+var iterAdjustment = 0;
+var baseIterations = 100;
+
 var iterations = 100;
 function isInSet(a, b) {
 	var a2 = 0, b2 = 0;
@@ -107,12 +112,31 @@ function trySetIterations(event){
 		setIterations();
 	}
 }
-function setIterations(){
-	iterations = +document.getElementById('iterinput').value;
+// function setIterationsByHand(){
+
+// }
+
+function setIterations(newValue){
+	if (newValue === undefined){
+		newValue = +document.getElementById('iterinput').value
+		var predicted = Math.round(baseIterations + 15*Math.log(scale));
+		iterAdjustment = newValue - predicted;
+
+		// iterations = ;
+	} else {
+		iterations = newValue;
+		document.getElementById('iterinput').value = newValue;
+	}
 }
-function bumpItUp(){
-	iterations += 10;
-	document.getElementById('iterinput').value = iterations;
+function adjust(isHigher){
+	if (isHigher){
+		iterAdjustment += 10;
+	}else{
+		iterAdjustment -= 10;
+	}
+	refresh();
+	// iterations += 10;
+	// document.getElementById('iterinput').value = iterations;
 }
 
 var res = 500;		//res * res pixels
@@ -189,6 +213,11 @@ function handleScroll (event){
     minY = originy - visibleHeight/2;
     maxY = originy + visibleHeight/2;
 
+    var newIterations = Math.round(baseIterations + 15*Math.log(scale)) + iterAdjustment;
+    
+    
+    // console.log(newIterations);
+    setIterations(newIterations);
     
     dispOriginX.innerHTML = originx.toFixed(3);
     dispOriginY.innerHTML = originy.toFixed(3);
@@ -207,15 +236,18 @@ window.onkeydown = function(event){
 	var speed = 0.1;
 	if (event.keyCode == 37){
 		originx -= visibleWidth*speed;
+		refresh();
 	} else if (event.keyCode == 39){
 		originx += visibleWidth*speed;
+		refresh();
 	} else if (event.keyCode == 38){
 		originy -= visibleHeight*speed;
+		refresh();
 	} else if (event.keyCode == 40){
 		originy += visibleHeight*speed;
+		refresh();
 	}
 
-	refresh();
 };
 function refresh(){
 	handleScroll({
