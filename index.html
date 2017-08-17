@@ -14,8 +14,8 @@
 	// ctx.strokeRect(0,0,512,512);
 
 
-var width = 512;
-var height = 512;
+var width = 500;
+var height = 500;
 var canvas = document.getElementById("canvas");
 canvas.width = width;
 canvas.height = height;
@@ -23,7 +23,7 @@ var context = canvas.getContext("2d");
 
 var zoomIntensity = 0.2;
 var scale = 1;
-scale = 10;
+// scale = 1.5;
 var originx = 0;
 var originy = 0;
 var visibleWidth = width;
@@ -42,7 +42,7 @@ var currentLeft, currentRight, currentTop, currentBottom;
 
 function isInSet(a, b) {
 	var a2 = 0, b2 = 0;
-	for (var i=0; i<30; i++){
+	for (var i=0; i<100; i++){
 		var temp = a2*a2 - b2*b2;
 		var temp2 = 2*a2*b2;
 		a2 = temp + a;
@@ -58,21 +58,22 @@ function isInSet(a, b) {
 // Draws in real space
 var minRe = -2;
 var maxRe = 0.5;
-var minIm = 1.25;//-1;		//so we can still have a square...?
-var maxIm = -1.25;//1;
+var minIm = -1.25;//-1;		//so we can still have a square...?
+var maxIm = 1.25;//1;
 
-var maxX = 0;
-var minX = width;
+var minX = 0;
+var maxX = width;
 var minY = 0;
 var maxY = height;
 
 var ratioX = (maxX-minX)/(maxRe-minRe);
 var ratioY = (maxY-minY)/(maxIm-minIm);
 
-var inc = 0.01;
+var inc = 0.005;
 
-var rectWidth = Math.round(inc*ratioX) + 1;
-var rectHeight = Math.round(inc*ratioY) + 1;
+var buff = 0.2;
+var rectWidth = inc*ratioX+buff;
+var rectHeight = inc*ratioY+buff;
 
 function graph(i,j){
 	var x = (i-minRe)*ratioX + minX;
@@ -83,11 +84,12 @@ function graph(i,j){
 function draw(){
 	context.fillStyle = 'white';
     context.fillRect(originx,originy,width/scale,height/scale);
-	for (var i=-2; i<0.5; i+=inc){				// real
-		for (var j=-1; j<1; j+=inc){			// imag
+	for (var i=minRe; i<maxRe; i+=inc){				// real
+		for (var j=minIm; j<maxIm; j+=inc){			// imag
 			// alert(''+i+','+j+':'+isInSet(i,j));
 			if (isInSet(i,j)){
 				graph(i,j);
+				// for (var k=0; k<10000; k++){}
 				// console.log(x,y);
 			}
 		}
@@ -109,7 +111,7 @@ canvas.onmousewheel = function (event){
 
     // Compute zoom factor.
     var zoom = Math.exp(wheel*zoomIntensity);
-    
+
     // Translate so the visible origin is at the context's origin.
     context.translate(originx, originy);
   
