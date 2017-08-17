@@ -8,11 +8,16 @@
 <canvas id="canvas" style="outline: 1px solid black"></canvas>
 <!-- <canvas id="canvas" width="600" height="600"></canvas> -->
 
+<div id="display1">0</div>
+<div id="display2">0</div>
+
 <script type="text/javascript">
 	// var canvas = document.getElementById('canvas');
 	// var ctx = canvas.getContext('2d');
 	// ctx.strokeRect(0,0,512,512);
 
+var display1 = document.getElementById('display1');
+var display2 = document.getElementById('display2');
 
 var width = 500;
 var height = 500;
@@ -75,15 +80,39 @@ var buff = 0.2;
 var rectWidth = inc*ratioX+buff;
 var rectHeight = inc*ratioY+buff;
 
+var res = 100;		//res * res pixels
+
 function graph(i,j){
-	var x = (i-minRe)*ratioX + minX;
-	var y = (j-minIm)*ratioY + minY;
+	// var x = (i-minRe)*ratioX + minX;
+	// var y = (j-minIm)*ratioY + minY;
+	// context.fillStyle = 'black';
+	// context.fillRect(x,y,rectWidth,rectHeight);
 	context.fillStyle = 'black';
-	context.fillRect(x,y,rectWidth,rectHeight);
+	context.fillRect(i,j,1,1);
 }
 function draw(){
 	context.fillStyle = 'white';
-    context.fillRect(originx,originy,width/scale,height/scale);
+    // context.fillRect(originx,originy,width/scale,height/scale);
+    context.fillRect(0,0,width,height);
+    minRe = minX/width;
+    maxRe = maxX/width;
+    minIm = minY/width;
+    maxIm = maxY/width;
+
+    // There's gotta be a more direct way...
+    var myinc = (maxRe - minRe) / res;
+
+    for (var i=0; i<res; i++){
+    	for (var j=0; j<res; j++){
+    		var re = minRe + i*myinc;
+    		var im = minIm + j*myinc;
+    		if (isInSet(re,im)){
+    			graph(i,j);
+    		}
+    	}
+    }
+
+
 	for (var i=minRe; i<maxRe; i+=inc){				// real
 		for (var j=minIm; j<maxIm; j+=inc){			// imag
 			// alert(''+i+','+j+':'+isInSet(i,j));
@@ -124,14 +153,27 @@ canvas.onmousewheel = function (event){
     originy -= mousey/(scale*zoom) - mousey/scale;
     
     // Scale it (centered around the origin due to the trasnslate above).
-    context.scale(zoom, zoom);
+    // context.scale(zoom, zoom);
     // Offset the visible origin to it's proper position.
-    context.translate(-originx, -originy);
+    // context.translate(-originx, -originy);
 
     // Update scale and others.
     scale *= zoom;
+    // display1.innerHTML = (scale);
     visibleWidth = width / scale;
     visibleHeight = height / scale;
+
+
+    minX = originx - visibleWidth;
+    maxX = originx + visibleWidth;
+
+    minY = originy - visibleHeight;
+    maxY = originy + visibleHeight;
+
+    display1.innerHTML = visibleWidth;
+    // display1.innerHTML = originx;
+    display2.innerHTML = visibleHeight;
+    // display2.innerHTML = originy;
 }
 </script>
 
