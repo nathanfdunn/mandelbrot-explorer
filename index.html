@@ -7,17 +7,53 @@
 
 <canvas id="canvas" style="outline: 1px solid black"></canvas>
 <!-- <canvas id="canvas" width="600" height="600"></canvas> -->
+<div>
+	<div>
+		<label>Iterations:</label><input onkeydown="trySetIterations(event)" id="iterinput" type="text" value="100"><button onclick="setIterations()">Set</button>
+	</div>
+	<button onclick="bumpItUp()">Increase</button>	
+</div>
 
-<div id="display1">0</div>
-<div id="display2">0</div>
+<table style="display:none">
+	<tr>
+		<td>Origin:</td>
+		<td id="dispOriginX"></td>
+		<td id="dispOriginY"></td>
+	</tr>
+	<tr>
+		<td><pre>View Dimensions:         </pre></td>
+		<td id="dispVisibleWidth"></td>
+		<td id="dispVisibleHeight"></td>
+	</tr>
+	<tr>
+		<td>X Covers:</td>
+		<td id="dispMinX"></td>
+		<td id="dispMaxX"></td>
+	</tr>
+	<tr>
+		<td>Y Covers:</td>
+		<td id="dispMinY"></td>
+		<td id="dispMaxY"></td>
+	</tr>
+</table>
+
 
 <script type="text/javascript">
 	// var canvas = document.getElementById('canvas');
 	// var ctx = canvas.getContext('2d');
 	// ctx.strokeRect(0,0,512,512);
+var dispOriginX = document.getElementById('dispOriginX');
+var dispOriginY = document.getElementById('dispOriginY');
 
-var display1 = document.getElementById('display1');
-var display2 = document.getElementById('display2');
+var dispVisibleWidth = document.getElementById('dispVisibleWidth');
+var dispVisibleHeight = document.getElementById('dispVisibleHeight');
+
+var dispMinX = document.getElementById('dispMinX');
+var dispMaxX = document.getElementById('dispMaxX');
+
+var dispMinY = document.getElementById('dispMinY');
+var dispMaxY = document.getElementById('dispMaxY');
+
 
 var width = 500;
 var height = 500;
@@ -29,10 +65,18 @@ var context = canvas.getContext("2d");
 var zoomIntensity = 0.2;
 var scale = 1;
 // scale = 1.5;
-var originx = 0;
+var originx = -0.75;
 var originy = 0;
-var visibleWidth = width;
-var visibleHeight = height;
+// A surprise!
+originx = -1.2536193516586536;
+originy = -0.3844925110750727;
+
+
+var initVisibleWidth = 2.5;
+var initVisibleHeight = 2.5;
+
+var visibleWidth = initVisibleWidth;
+var visibleHeight = initVisibleHeight;
 
 var currentLeft, currentRight, currentTop, currentBottom;
 
@@ -44,93 +88,68 @@ var currentLeft, currentRight, currentTop, currentBottom;
 //     context.fillStyle = "black";
 //     context.fillRect(50,50,100,100);
 // }
-
+var iterations = 100;
 function isInSet(a, b) {
 	var a2 = 0, b2 = 0;
-	for (var i=0; i<100; i++){
+	for (var i=0; i<iterations; i++){
 		var temp = a2*a2 - b2*b2;
 		var temp2 = 2*a2*b2;
 		a2 = temp + a;
 		b2 = temp2 + b;
+		if (a2*a2 + b2*b2 > 4){
+			return false;
+		}
 	}
-	var ret = a2*a2 + b2*b2 < 2;
-	return ret;
+	return true;
+}
+function trySetIterations(event){
+	if (event.keyCode == 13){
+		setIterations();
+	}
+}
+function setIterations(){
+	iterations = +document.getElementById('iterinput').value;
+}
+function bumpItUp(){
+	iterations += 10;
+	document.getElementById('iterinput').value = iterations;
 }
 
-//-2,2 -> 0,512
-//x,y -> x*128 + 256
+var res = 500;		//res * res pixels
+var widthRes = width/res;
+var heightRes = height/res;
 
-// Draws in real space
-var minRe = -2;
-var maxRe = 0.5;
-var minIm = -1.25;//-1;		//so we can still have a square...?
-var maxIm = 1.25;//1;
-
-var minX = 0;
-var maxX = width;
-var minY = 0;
-var maxY = height;
-
-var ratioX = (maxX-minX)/(maxRe-minRe);
-var ratioY = (maxY-minY)/(maxIm-minIm);
-
-var inc = 0.005;
-
-var buff = 0.2;
-var rectWidth = inc*ratioX+buff;
-var rectHeight = inc*ratioY+buff;
-
-var res = 100;		//res * res pixels
-
+//Essentially maps the resolution block to the width and stuff
 function graph(i,j){
-	// var x = (i-minRe)*ratioX + minX;
-	// var y = (j-minIm)*ratioY + minY;
-	// context.fillStyle = 'black';
-	// context.fillRect(x,y,rectWidth,rectHeight);
 	context.fillStyle = 'black';
-	context.fillRect(i,j,1,1);
+	context.fillRect(i*widthRes, j*heightRes, widthRes, heightRes);
 }
 function draw(){
 	context.fillStyle = 'white';
     // context.fillRect(originx,originy,width/scale,height/scale);
     context.fillRect(0,0,width,height);
-    minRe = minX/width;
-    maxRe = maxX/width;
-    minIm = minY/width;
-    maxIm = maxY/width;
-
     // There's gotta be a more direct way...
-    var myinc = (maxRe - minRe) / res;
+    var myinc = visibleWidth / res;		//assuming same for both
 
     for (var i=0; i<res; i++){
     	for (var j=0; j<res; j++){
-    		var re = minRe + i*myinc;
-    		var im = minIm + j*myinc;
+    		var re = minX + i*myinc;
+    		var im = minY + j*myinc;
     		if (isInSet(re,im)){
     			graph(i,j);
     		}
     	}
     }
 
-
-	for (var i=minRe; i<maxRe; i+=inc){				// real
-		for (var j=minIm; j<maxIm; j+=inc){			// imag
-			// alert(''+i+','+j+':'+isInSet(i,j));
-			if (isInSet(i,j)){
-				graph(i,j);
-				// for (var k=0; k<10000; k++){}
-				// console.log(x,y);
-			}
-		}
-	}
-	setTimeout(draw,1000/60);
+	setTimeout(draw,1000/100);
 }
 
 // Draw loop at 60FPS.
 // setInterval(draw, 1000/);
 setTimeout(draw,1000/60);
 
-canvas.onmousewheel = function (event){
+
+function handleScroll (event){
     event.preventDefault();
     // Get mouse offset.
     var mousex = event.clientX - canvas.offsetLeft;
@@ -142,15 +161,15 @@ canvas.onmousewheel = function (event){
     var zoom = Math.exp(wheel*zoomIntensity);
 
     // Translate so the visible origin is at the context's origin.
-    context.translate(originx, originy);
+    // context.translate(originx, originy);
   
     // Compute the new visible origin. Originally the mouse is at a
     // distance mouse/scale from the corner, we want the point under
     // the mouse to remain in the same place after the zoom, but this
     // is at mouse/new_scale away from the corner. Therefore we need to
     // shift the origin (coordinates of the corner) to account for this.
-    originx -= mousex/(scale*zoom) - mousex/scale;
-    originy -= mousey/(scale*zoom) - mousey/scale;
+    // originx -= mousex/(scale*zoom) - mousex/scale;
+    // originy -= mousey/(scale*zoom) - mousey/scale;
     
     // Scale it (centered around the origin due to the trasnslate above).
     // context.scale(zoom, zoom);
@@ -160,21 +179,53 @@ canvas.onmousewheel = function (event){
     // Update scale and others.
     scale *= zoom;
     // display1.innerHTML = (scale);
-    visibleWidth = width / scale;
-    visibleHeight = height / scale;
+    visibleWidth = initVisibleWidth / scale;
+    visibleHeight = initVisibleHeight / scale;
 
 
-    minX = originx - visibleWidth;
-    maxX = originx + visibleWidth;
+    minX = originx - visibleWidth/2;
+    maxX = originx + visibleWidth/2;
 
-    minY = originy - visibleHeight;
-    maxY = originy + visibleHeight;
+    minY = originy - visibleHeight/2;
+    maxY = originy + visibleHeight/2;
 
-    display1.innerHTML = visibleWidth;
-    // display1.innerHTML = originx;
-    display2.innerHTML = visibleHeight;
-    // display2.innerHTML = originy;
+    
+    dispOriginX.innerHTML = originx.toFixed(3);
+    dispOriginY.innerHTML = originy.toFixed(3);
+
+    dispVisibleWidth.innerHTML = visibleWidth.toFixed(3);
+    dispVisibleHeight.innerHTML = visibleHeight.toFixed(3);
+
+    dispMinX.innerHTML = minX.toFixed(3);
+    dispMaxX.innerHTML = maxX.toFixed(3);
+
+    dispMinY.innerHTML = minY.toFixed(3);
+    dispMaxY.innerHTML = maxY.toFixed(3);
 }
+canvas.onmousewheel = handleScroll;
+window.onkeydown = function(event){
+	var speed = 0.1;
+	if (event.keyCode == 37){
+		originx -= visibleWidth*speed;
+	} else if (event.keyCode == 39){
+		originx += visibleWidth*speed;
+	} else if (event.keyCode == 38){
+		originy -= visibleHeight*speed;
+	} else if (event.keyCode == 40){
+		originy += visibleHeight*speed;
+	}
+
+	refresh();
+};
+function refresh(){
+	handleScroll({
+		preventDefault:function(){},
+		clientX: 0,
+		clientY: 0,
+		wheelDelta: 0
+	});
+}
+refresh();
 </script>
 
 </body>
