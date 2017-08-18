@@ -9,14 +9,29 @@
 <!-- <canvas id="canvas" width="600" height="600"></canvas> -->
 <div>
 	<div>
-		<label>Iterations:</label><input onkeydown="trySetIterations(event)" id="iterinput" type="text" value="100"><button onclick="setIterations()">Set</button>
-		<input type="checkbox" id="autoadjustiterations" checked>
+		<label>Iterations:</label><input onkeydown="trySetIterations(event)" id="iterinput" type="text" value=""><button onclick="setIterations()">Set</button>
+		<label>Auto adjust iterations</label><input type="checkbox" id="autoadjustiterations" checked>
 	</div>
 	<button onclick="adjust(true)">Increase</button>	
 	<button onclick="adjust(false)">Decrease</button>
 </div>
+<div>
+	<div>
+		<label>Resolution:</label><input onkeydown="trySetResolution(event)" id="resinput" type="text" value=""><button onclick="setResolution()">Set</button>
+		<!-- <input type="checkbox" id="autoadjustiterations" checked> -->
+	</div>
+	<button onclick="adjustResolution(true)">Increase</button>	
+	<button onclick="adjustResolution(false)">Decrease</button>
+</div>
+<div>
+	<div>
+		<label>Sampling:</label><input onkeydown="trySetSampling(event)" id="sampinput" type="text" value=""><button onclick="setSampling()">Set</button>
+	</div>
+	<button onclick="adjustSampling(true)">Increase</button>	
+	<button onclick="adjustSampling(false)">Decrease</button>
+</div>
 
-<table style="display:initial">
+<table style="display:none">
 	<tr>
 		<td>Origin:</td>
 		<td id="dispOriginX"></td>
@@ -94,13 +109,20 @@ var iterAdjustment = 0;
 var baseIterations = 50;
 
 var iterations = baseIterations;
+
+var samplingNumber = 1;
+var samplingScale = 1/(2*samplingNumber+1);
+
+var res = 10;		//res * res pixels
+
+
 function isInSet2(i,j,minX,minY,myinc){
-	var s = 0;			// side length of how far to sample around
+	var s = 1;			// side length of how far to sample around
 	var w = 2*s+1;
-	for (var di=-s; di<=s; di++){
-		for (var dj=-s; dj<=s; dj++){
-			var re = minX + (i+di/w)*myinc;
-			var im = minY + (j+dj/w)*myinc;
+	for (var di=-samplingNumber; di<=samplingNumber; di++){
+		for (var dj=-samplingNumber; dj<=samplingNumber; dj++){
+			var re = minX + (i+di*samplingScale)*myinc;
+			var im = minY + (j+dj*samplingScale)*myinc;
 			if (isInSet(re,im)){
 				return true;
 			}
@@ -121,6 +143,54 @@ function isInSet(a, b) {
 	}
 	return true;
 }
+
+function trySetResolution(event){
+	if (event.keyCode == 13){
+		setResolution();
+	}
+}
+function setResolution(newValue){
+	if (newValue === undefined){
+		res = +document.getElementById('resinput');
+	} else {
+		res = newValue;
+		document.getElementById('resinput').value = newValue;
+	}
+	widthRes = width/res;
+	heightRes = width/res;
+}
+setResolution(res);
+function adjustResolution(isHigher){
+	if (isHigher){
+		setResolution(res + 10);
+	} else {
+		setResolution(res - 10);
+	}
+}
+
+function trySetSampling(event){
+	if (event.keyCode == 13){
+		setSampling();
+	}
+}
+function setSampling(newValue){
+	if (newValue === undefined){
+		samplingNumber = +document.getElementById('sampinput');
+	} else {
+		samplingNumber = newValue;
+		document.getElementById('sampinput').value = newValue;
+	}
+	samplingScale = 1/(2*samplingNumber + 1);
+}
+setSampling(samplingNumber);
+function adjustSampling(isHigher){
+	if (isHigher){
+		setSampling(samplingNumber + 1);
+	} else {
+		setSampling(samplingNumber - 1);
+	}
+}
+
 function trySetIterations(event){
 	if (event.keyCode == 13){
 		setIterations();
@@ -131,9 +201,7 @@ function trySetIterations(event){
 // }
 
 function setIterations(newValue){
-	if (!document.getElementById('autoadjustiterations').checked){
-		return;
-	}
+	// console.log('wuauaua ' + newValue);
 	if (newValue === undefined){
 		newValue = +document.getElementById('iterinput').value
 		var predicted = Math.round(baseIterations + 15*Math.log(scale));
@@ -156,19 +224,28 @@ function adjust(isHigher){
 	// document.getElementById('iterinput').value = iterations;
 }
 
-var res = 500;		//res * res pixels
 var widthRes = width/res;
 var heightRes = height/res;
 
 //Essentially maps the resolution block to the width and stuff
-function graph(i,j){
-	context.fillStyle = 'black';
-	context.fillRect(i*widthRes, j*heightRes, widthRes, heightRes);
+function graph(i,j,img){
+	// context.fillStyle = 'black';
+	// context.fillRect(i*widthRes, j*heightRes, widthRes, heightRes);
+	var index = i*res*4 + j*4;
+	if (doit){
+	console.log(i,j,index);
+	}
+	for (var x=0; x<4; x++){
+		img.data[i*res*4+j*4+x] = 255;
+	}
 }
 function draw(){
 	context.fillStyle = 'white';
     // context.fillRect(originx,originy,width/scale,height/scale);
     context.fillRect(0,0,width,height);
+
+    var img = context.createImageData(res, res);
+
     // There's gotta be a more direct way...
     var myinc = visibleWidth / res;		//assuming same for both
 
@@ -177,17 +254,21 @@ function draw(){
     		// var re = minX + i*myinc;
     		// var im = minY + j*myinc;
     		if (isInSet2(i,j,minX,minY,myinc)){
-    			graph(i,j);
+    			graph(i,j,img);
     		}
     		// if (isInSet(re,im)){
     		// 	graph(i,j);
     		// }
     	}
     }
-
+    if (doit){
+	    console.log(img);
+	    doit = false;
+    }
+    context.putImageData(img,0,0);
 	setTimeout(draw,1000/60);
 }
-
+var doit = true;
 // Draw loop at 60FPS.
 // setInterval(draw, 1000/);
 setTimeout(draw,1000/60);
@@ -205,31 +286,8 @@ function handleScroll (event){
     // Compute zoom factor.
     var zoom = Math.exp(wheel*zoomIntensity);
 
-    // Translate so the visible origin is at the context's origin.
-    // context.translate(originx, originy);
-  
-    // Compute the new visible origin. Originally the mouse is at a
-    // distance mouse/scale from the corner, we want the point under
-    // the mouse to remain in the same place after the zoom, but this
-    // is at mouse/new_scale away from the corner. Therefore we need to
-    // shift the origin (coordinates of the corner) to account for this.
-    // originx -= mousex/(scale*zoom) - mousex/scale;
-    // originy -= mousey/(scale*zoom) - mousey/scale;
-    
-    // Scale it (centered around the origin due to the trasnslate above).
-    // context.scale(zoom, zoom);
-    // Offset the visible origin to it's proper position.
-    // context.translate(-originx, -originy);
-
-    // originx -= mousex/(scale*zoom) - mousex/scale;
-    // originy -= mousey/(scale*zoom) - mousey/scale;
-
-
-    // Update scale and others.
-    // display1.innerHTML = (scale);
     visibleWidth = initVisibleWidth / scale;
     visibleHeight = initVisibleHeight / scale;
-
 
     minX = originx - visibleWidth/2;
     maxX = originx + visibleWidth/2;
@@ -237,7 +295,6 @@ function handleScroll (event){
     minY = originy - visibleHeight/2;
     maxY = originy + visibleHeight/2;
 
-    var newIterations = Math.round(baseIterations + 15*Math.log(scale)) + iterAdjustment;
     scale *= zoom;
 
     mousex = originx - (mousex-width/2)*visibleWidth/width;
@@ -245,8 +302,10 @@ function handleScroll (event){
     originy = mousey - zoom*(mousey - originy);
     originx = mousex - zoom*(mousex - originx);
 
-    // console.log(newIterations);
-    setIterations(newIterations);
+    var newIterations = Math.round(baseIterations + 15*Math.log(scale)) + iterAdjustment;
+    if (document.getElementById('autoadjustiterations').checked || event.iterationOverride){
+    	setIterations(newIterations);
+	}
     
     dispOriginX.innerHTML = originx.toFixed(3);
     dispOriginY.innerHTML = originy.toFixed(3);
@@ -283,8 +342,10 @@ function refresh(){
 		preventDefault:function(){},
 		clientX: 0,
 		clientY: 0,
-		wheelDelta: 0
+		wheelDelta: 0,
+		iterationOverride: true
 	});
+
 }
 refresh();
 </script>
