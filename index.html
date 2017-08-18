@@ -30,6 +30,10 @@
 	<button onclick="adjustSampling(true)">Increase</button>	
 	<button onclick="adjustSampling(false)">Decrease</button>
 </div>
+<div>
+	<label>Freeze origin:</label>
+	<input type="checkbox" id="freezeOrigin">
+</div>
 
 <table style="display:none">
 	<tr>
@@ -79,6 +83,11 @@ canvas.width = width;
 canvas.height = height;
 var context = canvas.getContext("2d");
 
+var bufferCanvas = document.createElement('canvas');
+bufferCanvas.width = width;
+bufferCanvas.height = height;
+var bufferContext = bufferCanvas.getContext("2d");
+
 var zoomIntensity = 0.2;
 var scale = 1;
 // scale = 1.5;
@@ -113,7 +122,7 @@ var iterations = baseIterations;
 var samplingNumber = 1;
 var samplingScale = 1/(2*samplingNumber+1);
 
-var res = 10;		//res * res pixels
+var res = 500;		//res * res pixels
 
 
 function isInSet2(i,j,minX,minY,myinc){
@@ -227,25 +236,31 @@ function adjust(isHigher){
 var widthRes = width/res;
 var heightRes = height/res;
 
+
 //Essentially maps the resolution block to the width and stuff
 function graph(i,j,img){
 	// context.fillStyle = 'black';
 	// context.fillRect(i*widthRes, j*heightRes, widthRes, heightRes);
 	var index = i*res*4 + j*4;
 	if (doit){
-	console.log(i,j,index);
+	// console.log(i,j,index);
 	}
-	for (var x=0; x<4; x++){
-		img.data[i*res*4+j*4+x] = 255;
+	for (var x=0; x<3; x++){
+		img.data[j*res*4+i*4+x] = 0;
 	}
 }
 function draw(){
-	context.fillStyle = 'white';
+	// context.fillStyle = 'black';
     // context.fillRect(originx,originy,width/scale,height/scale);
-    context.fillRect(0,0,width,height);
+    // context.fillRect(0,0,width,height);
+	context.setTransform(1, 0, 0, 1, 0, 0);
+	context.scale(widthRes, heightRes);
 
     var img = context.createImageData(res, res);
-
+    for (var i = 0; i<img.data.length; i++){
+    	img.data[i] = 255;
+    	// console.log(img.data[i]);
+    }
     // There's gotta be a more direct way...
     var myinc = visibleWidth / res;		//assuming same for both
 
@@ -265,7 +280,10 @@ function draw(){
 	    console.log(img);
 	    doit = false;
     }
-    context.putImageData(img,0,0);
+
+    bufferContext.putImageData(img,0,0);
+    context.drawImage(bufferCanvas,0,0);
+    // context.putImageData(img,0,0);
 	setTimeout(draw,1000/60);
 }
 var doit = true;
@@ -297,10 +315,13 @@ function handleScroll (event){
 
     scale *= zoom;
 
-    mousex = originx - (mousex-width/2)*visibleWidth/width;
-    mousey = originy - (mousey-height/2)*visibleHeight/height;
-    originy = mousey - zoom*(mousey - originy);
-    originx = mousex - zoom*(mousex - originx);
+
+    if (!document.getElementById('freezeOrigin').checked){
+	    mousex = originx - (mousex-width/2)*visibleWidth/width;
+	    mousey = originy - (mousey-height/2)*visibleHeight/height;
+	    originy = mousey - zoom*(mousey - originy);
+	    originx = mousex - zoom*(mousex - originx);
+    }
 
     var newIterations = Math.round(baseIterations + 15*Math.log(scale)) + iterAdjustment;
     if (document.getElementById('autoadjustiterations').checked || event.iterationOverride){
