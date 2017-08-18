@@ -16,7 +16,7 @@
 	<button onclick="adjust(false)">Decrease</button>
 </div>
 
-<table style="display:none">
+<table style="display:initial">
 	<tr>
 		<td>Origin:</td>
 		<td id="dispOriginX"></td>
@@ -91,9 +91,23 @@ var currentLeft, currentRight, currentTop, currentBottom;
 //     context.fillRect(50,50,100,100);
 // }
 var iterAdjustment = 0;
-var baseIterations = 100;
+var baseIterations = 50;
 
-var iterations = 100;
+var iterations = baseIterations;
+function isInSet2(i,j,minX,minY,myinc){
+	var s = 0;			// side length of how far to sample around
+	var w = 2*s+1;
+	for (var di=-s; di<=s; di++){
+		for (var dj=-s; dj<=s; dj++){
+			var re = minX + (i+di/w)*myinc;
+			var im = minY + (j+dj/w)*myinc;
+			if (isInSet(re,im)){
+				return true;
+			}
+		}
+	}
+	return false;
+}
 function isInSet(a, b) {
 	var a2 = 0, b2 = 0;
 	for (var i=0; i<iterations; i++){
@@ -160,15 +174,18 @@ function draw(){
 
     for (var i=0; i<res; i++){
     	for (var j=0; j<res; j++){
-    		var re = minX + i*myinc;
-    		var im = minY + j*myinc;
-    		if (isInSet(re,im)){
+    		// var re = minX + i*myinc;
+    		// var im = minY + j*myinc;
+    		if (isInSet2(i,j,minX,minY,myinc)){
     			graph(i,j);
     		}
+    		// if (isInSet(re,im)){
+    		// 	graph(i,j);
+    		// }
     	}
     }
 
-	setTimeout(draw,1000/100);
+	setTimeout(draw,1000/60);
 }
 
 // Draw loop at 60FPS.
@@ -181,6 +198,7 @@ function handleScroll (event){
     // Get mouse offset.
     var mousex = event.clientX - canvas.offsetLeft;
     var mousey = event.clientY - canvas.offsetTop;
+
     // Normalize wheel to +1 or -1.
     var wheel = event.wheelDelta/120;
 
@@ -203,8 +221,11 @@ function handleScroll (event){
     // Offset the visible origin to it's proper position.
     // context.translate(-originx, -originy);
 
+    // originx -= mousex/(scale*zoom) - mousex/scale;
+    // originy -= mousey/(scale*zoom) - mousey/scale;
+
+
     // Update scale and others.
-    scale *= zoom;
     // display1.innerHTML = (scale);
     visibleWidth = initVisibleWidth / scale;
     visibleHeight = initVisibleHeight / scale;
@@ -217,7 +238,12 @@ function handleScroll (event){
     maxY = originy + visibleHeight/2;
 
     var newIterations = Math.round(baseIterations + 15*Math.log(scale)) + iterAdjustment;
+    scale *= zoom;
 
+    mousex = originx - (mousex-width/2)*visibleWidth/width;
+    mousey = originy - (mousey-height/2)*visibleHeight/height;
+    originy = mousey - zoom*(mousey - originy);
+    originx = mousex - zoom*(mousex - originx);
 
     // console.log(newIterations);
     setIterations(newIterations);
