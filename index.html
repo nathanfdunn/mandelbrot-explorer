@@ -7,6 +7,7 @@
 
 <canvas id="canvas" style="outline: 1px solid black"></canvas>
 <!-- <canvas id="canvas" width="600" height="600"></canvas> -->
+<table id="examiner"></table>
 <div>
 	<div>
 		<label>Iterations:</label><input onkeydown="trySetIterations(event)" id="iterinput" type="text" value=""><button onclick="setIterations()">Set</button>
@@ -105,6 +106,39 @@ var visibleWidth = initVisibleWidth;
 var visibleHeight = initVisibleHeight;
 
 var currentLeft, currentRight, currentTop, currentBottom;
+
+
+var examineRe, examineIm;
+var examinedValues = [];
+
+function startExamineValue(re, im){
+	// examinedValues = [[re,im]];
+	examinedValues = examineValue(re,im,100);
+
+}
+
+// function calcNext10(){
+// 	var lastExamined = examinedValues[examinedValues.length - 1];
+// 	var next = examineValue(lastExamined[0], lastExamined[1], 10);
+// }
+
+// Excludes the starting value...
+function examineValue(re, im, upTo){
+	var ret = [];
+	var a2 = re, b2 = im;
+	for (var i=0; i<upTo; i++){
+		var temp = a2*a2 - b2*b2;
+		var temp2 = 2*a2*b2;
+		a2 = temp + a;
+		b2 = temp2 + b;
+		ret.push([a2,b2]);
+		if (a2*a2 + b2*b2 > 4){
+			return false;
+		}
+	}
+	return true;
+}
+
 
 // function draw(){
 //     // Clear screen to white.
