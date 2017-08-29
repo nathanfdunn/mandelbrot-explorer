@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Example</title>
+</head>
+<body>
+<script type="text/javascript">
+
+function shaderProgram(gl, vs, fs) {
+	var prog = gl.createProgram();
+	var addshader = function(type, source) {
+		var s = gl.createShader((type == 'vertex') ?
+			gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
+		gl.shaderSource(s, source);
+		gl.compileShader(s);
+		if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+			throw "Could not compile "+type+
+				" shader:\n\n"+gl.getShaderInfoLog(s);
+		}
+		gl.attachShader(prog, s);
+	};
+	addshader('vertex', vs);
+	addshader('fragment', fs);
+	gl.linkProgram(prog);
+	if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+		throw "Could not link the shader program!";
+	}
+	return prog;
+}
+
+function attributeSetFloats(gl, prog, attr_name, rsize, arr) {
+	gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr),
+		gl.STATIC_DRAW);
+	var attr = gl.getAttribLocation(prog, attr_name);
+	gl.enableVertexAttribArray(attr);
+	gl.vertexAttribPointer(attr, rsize, gl.FLOAT, false, 0, 0);
+}
+
+function draw() {
+	try {
+		/*var*/ gl = document.getElementById("webgl")
+			.getContext("webgl");
+		if (!gl) { throw "x"; }
+	} catch (err) {
+		throw "Your web browser does not support WebGL!";
+	}
+	gl.clearColor(0, 0, 0, 1);
+	gl.clear(gl.COLOR_BUFFER_BIT);
+
+	var prog = shaderProgram(gl,
+		`
+		//attribute vec3 
+		attribute vec2 pos;
+		void main() {
+			// gl_PointSize = 10.0;
+			// gl_Position = vec4(pos, 0.0, 2.0);
+			gl_Position = vec4(pos, 0.0, 10.0);
+		}
+
+		`,
+		`
+		precision highp float;
+		void main() {
+
+			if (gl_FragCoord.x*gl_FragCoord.x +
+					gl_FragCoord.y*gl_FragCoord.y > 100000.0) {
+
+				gl_FragColor = vec4(1.0,1.0,1.0,1.0);
+				gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
+			} else {
+				gl_FragColor = vec4(0.0,0.0,0.0,1.0);
+			}
+return;
+			vec2 c = vec2(gl_FragCoord.x, gl_FragCoord.y);
+			vec2 z = vec2(0,0);
+			for (int i=0; i<3; i++){
+				z = vec2(
+					z.x*z.x - z.y*z.y,
+					2.0*z.x*z.y
+				);
+				z += c;
+			}
+			// if (z.x*z.x + z.y*z.y > 4.0) {
+			z = vec2(gl_FragCoord);
+			if (z.x*z.x + z.y*z.y > 1.0) {
+				gl_FragColor = vec4(1.0,1.0,1.0,1.0);
+			} else {
+				gl_FragColor = vec4(0.0,0.0,0.0,0.0);
+			}
+
+			// gl_FragColor = vec4(
+			// 	gl_FragCoord.z / (gl_FragCoord.x + gl_FragCoord.y), 
+			// 	gl_FragCoord.z / (gl_FragCoord.x + gl_FragCoord.y)
+			// , 1.0, 1.0);
+
+			// gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+		}
+
+		`
+	);
+	gl.useProgram(prog);
+
+	attributeSetFloats(gl, prog, "pos", 2, [
+		-2, -2,
+		-2, 2,
+		2, -2,
+		2, 2
+	]);
+	
+	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+	// gl.drawArrays(gl.POINTS, 0, 4);
+}
+
+function init() {
+	try {
+		draw();
+	} catch (e) {
+		alert("Error: "+e);
+	}
+}
+setTimeout(init, 100);
+
+</script>
+<canvas id="webgl" width="500" height="500"></canvas>
+</body>
+<!-- </html> -->

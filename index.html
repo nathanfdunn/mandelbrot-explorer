@@ -8,6 +8,7 @@
 <canvas id="canvas" style="outline: 1px solid black"></canvas>
 <!-- <canvas id="canvas" width="600" height="600"></canvas> -->
 <table id="examiner"></table>
+<!-- <input type="number" step="0.1" value="0" onchange="phi2=+this.value"> -->
 <div>
 	<div>
 		<label>Iterations:</label><input onkeydown="trySetIterations(event)" id="iterinput" type="text" value=""><button onclick="setIterations()">Set</button>
@@ -166,12 +167,13 @@ function isInSet2(i,j,minX,minY,myinc){
 		for (var dj=-samplingNumber; dj<=samplingNumber; dj++){
 			var re = minX + (i+di*samplingScale)*myinc;
 			var im = minY + (j+dj*samplingScale)*myinc;
-			if (isInSet(re,im)){
-				return true;
-			}
+			return isInSet(re,im);
+			// if (isInSet(re,im)){
+			// 	return true;
+			// }
 		}
 	}
-	return false;
+	// return false;
 }
 function isInSet(a, b) {
 	var a2 = 0, b2 = 0;
@@ -181,10 +183,12 @@ function isInSet(a, b) {
 		a2 = temp + a;
 		b2 = temp2 + b;
 		if (a2*a2 + b2*b2 > 4){
-			return false;
+			// return false;
+			return (iterations-i)/iterations;
 		}
 	}
-	return true;
+	// return true;
+	return 0;
 }
 
 function trySetResolution(event){
@@ -270,18 +274,35 @@ function adjust(isHigher){
 var widthRes = width/res;
 var heightRes = height/res;
 
+function mysin(col, phi){
+	return 255*(1+Math.sin(col*3.14 + phi))/2;
+}
+
+var phi2 = 4.8;
 
 //Essentially maps the resolution block to the width and stuff
-function graph(i,j,img){
+function graph(i,j,img,col){
 	// context.fillStyle = 'black';
 	// context.fillRect(i*widthRes, j*heightRes, widthRes, heightRes);
 	var index = i*res*4 + j*4;
 	if (doit){
 	// console.log(i,j,index);
 	}
-	for (var x=0; x<3; x++){
-		img.data[j*res*4+i*4+x] = 0;
-	}
+	var third = 2*3.14/3;
+	var red = mysin(col, 0 + phi2);
+	var green = mysin(col, third + phi2);
+	var blue = mysin(col, 2*third + phi2);
+	// var red = 255*square(Math.sin(col*3.14/2 + 3.14/6));
+	// var green = 255*square(Math.sin(col*3.14/2 + 2*3.14/6));
+	// var blue = 255*square(Math.sin(col*3.14/2 + 3.14/2));
+	img.data[j*res*4+i*4+0] = red;
+	img.data[j*res*4+i*4+1] = green;
+	img.data[j*res*4+i*4+2] = blue;
+	img.data[j*res*4+i*4+3] = 255;//col*255;
+
+	// for (var x=0; x<3; x++){
+	// 	img.data[j*res*4+i*4+x] = col*255;
+	// }
 }
 function draw(){
 	// context.fillStyle = 'black';
@@ -302,9 +323,8 @@ function draw(){
     	for (var j=0; j<res; j++){
     		// var re = minX + i*myinc;
     		// var im = minY + j*myinc;
-    		if (isInSet2(i,j,minX,minY,myinc)){
-    			graph(i,j,img);
-    		}
+    		var col = isInSet2(i,j,minX,minY,myinc);
+			graph(i,j,img, col);
     		// if (isInSet(re,im)){
     		// 	graph(i,j);
     		// }
@@ -376,6 +396,7 @@ function handleScroll (event){
 }
 canvas.onmousewheel = handleScroll;
 window.onkeydown = function(event){
+	return;
 	var speed = 0.1;
 	if (event.keyCode == 37){
 		originx -= visibleWidth*speed;
