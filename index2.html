@@ -4,7 +4,7 @@
 	<meta charset="utf-8" />
 	<title>Example</title>
 </head>
-<body>
+<body style="background-color: rgb(215,255,255)">
 <script type="text/javascript">
 
 function shaderProgram(gl, vs, fs) {
@@ -37,8 +37,11 @@ function attributeSetFloats(gl, prog, attr_name, rsize, arr) {
 	gl.enableVertexAttribArray(attr);
 	gl.vertexAttribPointer(attr, rsize, gl.FLOAT, false, 0, 0);
 }
-
+// var zoom = 20.0;
+var zoom = 1.0;
 function draw() {
+	zoom *= 1.01;
+	console.log(zoom);
 	try {
 		/*var*/ gl = document.getElementById("webgl")
 			.getContext("webgl");
@@ -60,8 +63,12 @@ function draw() {
 		`
 		precision highp float;
 		void main() {
-			float zoom = 4.0;
-			float xoff = -0.0;
+
+
+			// float zoom = 2.0;
+			float zoom = `+ zoom.toFixed(20) +`;
+
+			float xoff = 1.5;//0.5;
 			float yoff = 0.0;
 			float x = (gl_FragCoord.x - 250.0)/(zoom*125.0) - xoff;
 			float y = (gl_FragCoord.y - 250.0)/(zoom*125.0) - yoff;
@@ -70,8 +77,9 @@ function draw() {
 			vec2 z = vec2(0,0);
 
 			float j;
-			int max = 1000;
+			int max = 100;
 			for (int i=0; i<999999; i++){
+				j = float(i);
 				if (i >= max){
 					break;
 				}
@@ -81,20 +89,13 @@ function draw() {
 				);
 				z += c;
 				if (z.x*z.x + z.y*z.y > 4.0){
-					j = float(i);
 					break;
 				}
 			}
-
-			if (z.x*z.x + z.y*z.y < 4.0){
-				gl_FragColor = vec4(j/100.0,j/100.0,j/100.0,1.0);
-
-			}else{
-				gl_FragColor = vec4(1.0,1.0,1.0,1.0);
-
-
-				// gl_FragColor = vec4(0.0,0.0,0.0,1.0);
-			}
+			
+			float maxf = float(max);
+			j = maxf - j;
+				gl_FragColor = vec4(j/maxf,j/maxf,j/maxf,1.0);
 		}
 
 		`
@@ -114,6 +115,8 @@ function draw() {
 	
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 	// gl.drawArrays(gl.POINTS, 0, 4);
+	setTimeout(draw, 1000/60);
+
 }
 
 function init() {
