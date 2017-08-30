@@ -51,51 +51,50 @@ function draw() {
 
 	var prog = shaderProgram(gl,
 		`
-		//attribute vec3 
 		attribute vec2 pos;
 		void main() {
-			// gl_PointSize = 10.0;
-			// gl_Position = vec4(pos, 0.0, 2.0);
-			gl_Position = vec4(pos, 0.0, 10.0);
+			gl_Position = vec4(pos, 0.0, 1.0);
 		}
 
 		`,
 		`
 		precision highp float;
 		void main() {
+			float zoom = 4.0;
+			float xoff = -0.0;
+			float yoff = 0.0;
+			float x = (gl_FragCoord.x - 250.0)/(zoom*125.0) - xoff;
+			float y = (gl_FragCoord.y - 250.0)/(zoom*125.0) - yoff;
 
-			if (gl_FragCoord.x*gl_FragCoord.x +
-					gl_FragCoord.y*gl_FragCoord.y > 100000.0) {
-
-				gl_FragColor = vec4(1.0,1.0,1.0,1.0);
-				gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
-			} else {
-				gl_FragColor = vec4(0.0,0.0,0.0,1.0);
-			}
-return;
-			vec2 c = vec2(gl_FragCoord.x, gl_FragCoord.y);
+			vec2 c = vec2(x,y);
 			vec2 z = vec2(0,0);
-			for (int i=0; i<3; i++){
+
+			float j;
+			int max = 1000;
+			for (int i=0; i<999999; i++){
+				if (i >= max){
+					break;
+				}
 				z = vec2(
 					z.x*z.x - z.y*z.y,
 					2.0*z.x*z.y
 				);
 				z += c;
+				if (z.x*z.x + z.y*z.y > 4.0){
+					j = float(i);
+					break;
+				}
 			}
-			// if (z.x*z.x + z.y*z.y > 4.0) {
-			z = vec2(gl_FragCoord);
-			if (z.x*z.x + z.y*z.y > 1.0) {
+
+			if (z.x*z.x + z.y*z.y < 4.0){
+				gl_FragColor = vec4(j/100.0,j/100.0,j/100.0,1.0);
+
+			}else{
 				gl_FragColor = vec4(1.0,1.0,1.0,1.0);
-			} else {
-				gl_FragColor = vec4(0.0,0.0,0.0,0.0);
+
+
+				// gl_FragColor = vec4(0.0,0.0,0.0,1.0);
 			}
-
-			// gl_FragColor = vec4(
-			// 	gl_FragCoord.z / (gl_FragCoord.x + gl_FragCoord.y), 
-			// 	gl_FragCoord.z / (gl_FragCoord.x + gl_FragCoord.y)
-			// , 1.0, 1.0);
-
-			// gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 		}
 
 		`
@@ -103,10 +102,14 @@ return;
 	gl.useProgram(prog);
 
 	attributeSetFloats(gl, prog, "pos", 2, [
-		-2, -2,
-		-2, 2,
-		2, -2,
-		2, 2
+		-1, -1,
+		-1, 1,
+		1, -1,
+		1, 1
+		// -2, -2,
+		// -2, 2,
+		// 2, -2,
+		// 2, 2
 	]);
 	
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
