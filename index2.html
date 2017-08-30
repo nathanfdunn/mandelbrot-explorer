@@ -77,12 +77,9 @@ function draw() {
 			vec2 z = vec2(0,0);
 
 			float j;
-			int max = 100;
-			for (int i=0; i<999999; i++){
+			const int max = 1000;
+			for (int i=0; i<max; i++){
 				j = float(i);
-				if (i >= max){
-					break;
-				}
 				z = vec2(
 					z.x*z.x - z.y*z.y,
 					2.0*z.x*z.y
