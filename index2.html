@@ -58,43 +58,26 @@ function draw() {
 		void main() {
 			gl_Position = vec4(pos, 0.0, 1.0);
 		}
-
 		`,
-		`
-		precision highp float;
+
+		`precision highp float;
+		precision highp int;
+		` + bitwisepolyfill + `
 		void main() {
+			float scale = 2.0;
+			// float x = (gl_FragCoord.x - 250.0)/(scale*125.0);
+			// float y = (gl_FragCoord.y - 250.0)/(scale*125.0);
 
+			int xint = int((gl_FragCoord.x - 250.0)/(1.0/scale*25.0));
 
-			// float zoom = 2.0;
-			float zoom = `+ zoom.toFixed(20) +`;
+			int k = 341;
 
-			float xoff = 1.5;//0.5;
-			float yoff = 0.0;
-			float x = (gl_FragCoord.x - 250.0)/(zoom*125.0) - xoff;
-			float y = (gl_FragCoord.y - 250.0)/(zoom*125.0) - yoff;
-
-			vec2 c = vec2(x,y);
-			vec2 z = vec2(0,0);
-
-			float j;
-			const int max = 1000;
-			for (int i=0; i<max; i++){
-				j = float(i);
-				z = vec2(
-					z.x*z.x - z.y*z.y,
-					2.0*z.x*z.y
-				);
-				z += c;
-				if (z.x*z.x + z.y*z.y > 4.0){
-					break;
-				}
+			if ( AND(k, RShift(1,float(xint))) > 0 ){
+				gl_FragColor = vec4(1.0,1.0,1.0,1.0);
+			}else{
+				gl_FragColor = vec4(0.0,0.0,0.0,1.0);
 			}
-			
-			float maxf = float(max);
-			j = maxf - j;
-				gl_FragColor = vec4(j/maxf,j/maxf,j/maxf,1.0);
 		}
-
 		`
 	);
 	gl.useProgram(prog);
@@ -112,9 +95,72 @@ function draw() {
 	
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 	// gl.drawArrays(gl.POINTS, 0, 4);
-	setTimeout(draw, 1000/60);
+	// setTimeout(draw, 1000/60);
 
 }
+
+bitwisepolyfill = `
+int OR(int n1, int n2){
+
+    float v1 = float(n1);
+    float v2 = float(n2);
+    
+    int byteVal = 1;
+    int result = 0;
+    
+    for(int i = 0; i < 32; i++){
+        bool keepGoing = v1>0.0 || v2 > 0.0;
+        if(keepGoing){
+            
+            bool addOn = mod(v1, 2.0) > 0.0 || mod(v2, 2.0) > 0.0;
+            
+            if(addOn){
+                result += byteVal;
+            }
+            
+            v1 = floor(v1 / 2.0);
+            v2 = floor(v2 / 2.0);
+            
+            byteVal *= 2;
+        } else {
+            return result;
+        }
+    }
+    return result;	
+}
+
+int AND(int n1, int n2){
+    
+    float v1 = float(n1);
+    float v2 = float(n2);
+    
+    int byteVal = 1;
+    int result = 0;
+    
+    for(int i = 0; i < 32; i++){
+        bool keepGoing = v1>0.0 || v2 > 0.0;
+        if(keepGoing){
+            
+            bool addOn = mod(v1, 2.0) > 0.0 && mod(v2, 2.0) > 0.0;
+            
+            if(addOn){
+                result += byteVal;
+            }
+            
+            v1 = floor(v1 / 2.0);
+            v2 = floor(v2 / 2.0);
+            byteVal *= 2;
+        } else {
+            return result;
+        }
+    }
+    return result;
+}
+
+int RShift(int num, float shifts){
+    return int(floor(float(num) / pow(2.0, shifts)));
+}
+`;
 
 function init() {
 	try {
