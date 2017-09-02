@@ -20,6 +20,19 @@ x = [0]*length
 
 y = [0]*length
 
+class Num:
+	def __init__(self, arr, sgn):
+		self.arr = arr
+		self.sgn = sgn
+
+def cmp(arr1, arr2):
+	for i in reversed(range(length)):
+		if arr1[i] > arr2[i]:
+			return 1
+		elif arr2[i] > arr1[i]:
+			return -1
+	return 0
+
 def add(x, y):
 	global overflow
 	overflow = False
