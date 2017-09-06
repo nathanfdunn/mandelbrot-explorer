@@ -204,20 +204,20 @@ def truncate(n: Num):
 	return Num(newarr, n.pos)
 
 # # Oh look at that, x can be a regular int too
-# def toFloat(x: Num) -> float:
-# 	# return int(x) / 2**(length*N - k)
-# 	# return int(x) * maxFloat / maxVal
-# 	return int(x) / 2**(length*N - N)
+def toFloat(x: Num) -> float:
+	# return int(x) / 2**(length*N - k)
+	# return int(x) * maxFloat / maxVal
+	return int(x) / 2**(length*N - N)
 
-# def fromFloat(x: float) -> Num:
-# 	X = round(x * maxVal / maxFloat)
-# 	# So this is trickier...I guess just round
-# 	return Num.fromint(X)
-# 	# res = int(x*2**(length*N - k))
-# 	# return Num.fromint(res)
+def fromFloat(x: float) -> Num:
+	X = round(x * maxVal / maxFloat)
+	# So this is trickier...I guess just round
+	return Num.fromint(X)
+	# res = int(x*2**(length*N - k))
+	# return Num.fromint(res)
 
-# def toFloatUntrunc(x: int):
-# 	return int(x) / 2**(length*N+k)
+def toFloatUntrunc(x: int):
+	return int(x) / 2**(length*N+k)
 
 
 
@@ -266,37 +266,40 @@ for i in range(100):
 		register.append(i)
 		print(val1, val2, int(res), n1, n2, res, val1-val2)
 
-# for i in range(100):
-# 	val = hash(str(i)) % maxVal
-# 	assert val == int(fromFloat(toFloat(val))), 'no good ' + str(val)
+for i in range(100):
+	val = hash(str(i)) % maxVal
+	assert val == int(fromFloat(toFloat(val))), 'no good ' + str(val)
 
-# for i in range(100):
-# 	X = random.randint(-maxVal, maxVal)
-# 	Y = random.randint(-maxVal, maxVal)
-# 	x = toFloat(X)
-# 	y = toFloat(Y)
-# 	expected = x*y
-# 	actual = toFloat(X*Y)
-# 	assert math.isclose(expected, actual), f'Nope: {X}, {Y}, {X*Y}, {x}, {y}, {expected}, {actual}'
+for i in range(100):
+	X = random.randint(-maxVal, maxVal)
+	Y = random.randint(-maxVal, maxVal)
+	x = toFloat(X)
+	y = toFloat(Y)
+	expected = x*y
+	actual = toFloat(X*Y)
+	assert math.isclose(expected, actual), f'Nope: {X}, {Y}, {X*Y}, {x}, {y}, {expected}, {actual}'
 
 
 
-# for i in range(100):
-# 	# Ok, I figured out what was going on
-# 	# (I think). It wasn't matching up
-# 	# because we rely on not leaving
-# 	# the plausible range of floats...
-# 	val1 = random.randint(-maxVal, maxVal)
-# 	val2 = random.randint(-maxVal, maxVal)
-# 	# val1 = random.randint(-maxWord, maxWord)
-# 	# val2 = random.randint(-maxWord, maxWord)
-# 	x1 = Num.fromint(val1)
-# 	x2 = Num.fromint(val2)
-# 	numRes = mulNum(x1, x2)
-# 	truncNum = truncate(numRes)
-# 	res = toFloat(truncNum)
-# 	y1 = toFloat(x1)
-# 	y2 = toFloat(x2)
-# 	assert math.isclose(res, y1*y2), f'Nope: {val1}, {val2}, {y1}, {y2}, {y1*y2}, {res}'
-# 	print(val1, val2, y1, y2, y1*y2, res)
+for i in range(100):
+	# Ok, I figured out what was going on
+	# (I think). It wasn't matching up
+	# because we rely on not leaving
+	# the plausible range of floats...
+	bound = 2**(length*N // 20)
+	val1 = random.randint(-bound, bound)
+	val2 = random.randint(-bound, bound)
+	# val1 = random.randint(-maxVal, maxVal)
+	# val2 = random.randint(-maxVal, maxVal)
+	# val1 = random.randint(-maxWord, maxWord)
+	# val2 = random.randint(-maxWord, maxWord)
+	x1 = Num.fromint(val1)
+	x2 = Num.fromint(val2)
+	numRes = mulNum(x1, x2)
+	truncNum = truncate(numRes)
+	res = toFloat(truncNum)
+	y1 = toFloat(x1)
+	y2 = toFloat(x2)
+	assert math.isclose(res, y1*y2), f'Nope: {val1}, {val2}, {y1}, {y2}, {y1*y2}, {res}'
+	print(val1, val2, y1, y2, y1*y2, res)
 
